@@ -15,6 +15,20 @@
   var textHashtagsInput = uploadImageForm.querySelector('.text__hashtags');
   var inputFlag = false;
   var currentFilter;
+  var currentFilterName;
+  var defaultFilter = 'effect-none';
+  var scale = document.querySelector('.scale');
+  var scaleLine = scale.querySelector('.scale__line');
+  var scalePin = scaleLine.querySelector('.scale__pin');
+  var scaleLevel = scaleLine.querySelector('.scale__level');
+  var SCALE_PIN_WIDTH = scalePin.offsetWidth;
+  var SCALE_LINE_WIDTH = 453;
+  var DEFAULT_PERCENT = '20%';
+
+  var SCALE_PIN_COORD = {
+    min: 0,
+    max: SCALE_LINE_WIDTH
+  }
 
   var LimitationInput = {
     'descriptionTextarea': {
@@ -35,6 +49,58 @@
     }
   }
 
+  // 'none': '',
+  //   'chrome': 'filter: grayscale(0.2)',
+  //   'sepia': 'filter: sepia(0.2)',
+  //   'marvin': 'filter: invert(20%)',
+  //   'phobos': 'filter: blur(0.6px)',
+  //   'heat': 'filter: brightness(0.6)'
+
+  var filterToValue = {
+    'none': '',
+    'chrome': 'grayscale',
+    'sepia': 'sepia',
+    'marvin': 'invert',
+    'phobos': 'blur',
+    'heat': 'brightness'
+  }
+
+  var MAX_FILTER_VALUE = {
+    'none': '',
+    'chrome': '1',
+    'sepia': '1',
+    'marvin': '100%',
+    'phobos': '3px',
+    'heat': '3'
+  }
+
+  var changeSaturation = function (xPercent) {
+    var currentValue = (parseInt(MAX_FILTER_VALUE[currentFilterName], 10)) / 100 * xPercent + MAX_FILTER_VALUE[currentFilterName].replace(/[-.0-9]*/g, '');
+    imgPreview.style.filter = filterToValue[currentFilterName] + '(' + currentValue + ')';
+  }
+
+  var onEffectChange = function (evt) {
+    var prevFilter = currentFilter;
+    var defaultValue;
+    if (prevFilter === defaultFilter || !prevFilter) {
+      scale.classList.remove('hidden');
+    }
+    imgPreview.classList.remove(prevFilter);
+    currentFilter = evt.target.id;
+    if (currentFilter === defaultFilter) {
+      scale.classList.add('hidden');
+    }
+    scalePin.style.left = DEFAULT_PERCENT;
+    scaleLevel.style.width = DEFAULT_PERCENT;
+    imgPreview.classList.add(currentFilter);
+    currentFilterName = currentFilter.replace('effect-', '');
+    if (currentFilter !== defaultFilter) {
+      changeSaturation(parseInt(DEFAULT_PERCENT, 10));
+    } else {
+      imgPreview.style.filter = 'none';
+    }
+  }
+
   var getUniqueElements = function (array) {
     var object = {};
 
@@ -49,14 +115,6 @@
   var onUploadCancelButtonClick = function (evt) {
     evt.preventDefault();
     imgUploadOverlay.classList.add('hidden');
-  }
-
-  var onEffectChange = function (evt) {
-    if (currentFilter) {
-      imgPreview.classList.remove(currentFilter);
-    }
-    currentFilter = evt.target.id;
-    imgPreview.classList.add(currentFilter);
   }
 
   var onResizeMinusBtnClick = function (evt) {
@@ -132,7 +190,7 @@
       inputFlag = false;
     } else {
       setTimeout(function () {
-        uploadImageForm.reset();
+        window.form.reset();
       }, 1000);
     }
   }
@@ -160,4 +218,59 @@
   uploadImageForm.action = "https://js.dump.academy/kekstagram";
   uploadImageForm.method = "post";
   uploadImageForm.enctype = "multipart/form-data";
+  scale.classList.add('hidden');
+
+  var onScalePinMouseDown = function (evt) {
+    evt.preventDefault();
+
+    var startCoords = {
+      x: evt.clientX
+    }
+
+    var offsetX;
+    var offsetXPercent;
+
+    var onScalePinMouseMove = function (moveEvt) {
+      moveEvt.preventDefault();
+
+      var shift = {
+        x: moveEvt.clientX - startCoords.x
+      }
+
+      startCoords = {
+        x: moveEvt.clientX
+      }
+
+      offsetX = scalePin.offsetLeft + shift.x;
+      offsetXPercent = offsetX / SCALE_LINE_WIDTH * 100;
+
+      if (offsetX >= SCALE_PIN_COORD.min && offsetX <= SCALE_PIN_COORD.max) {
+        scalePin.style.left = offsetXPercent + '%';
+        scaleLevel.style.width = offsetXPercent + '%';
+        changeSaturation(offsetXPercent);
+      }
+    }
+
+    var onScalePinMouseUp = function (upEvt) {
+      upEvt.preventDefault();
+      document.removeEventListener('mousemove', onScalePinMouseMove);
+      document.removeEventListener('mouseup', onScalePinMouseUp)
+    }
+
+    document.addEventListener('mousemove', onScalePinMouseMove);
+    document.addEventListener('mouseup', onScalePinMouseUp);
+  }
+
+  scalePin.addEventListener('mousedown', onScalePinMouseDown);
+
+  window.form = {
+    reset: function () {
+      uploadImageForm.reset();
+      imgPreview.style.filter = 'none';
+      scalePin.style.left = DEFAULT_PERCENT;
+      scaleLevel.style.width = DEFAULT_PERCENT;
+      scale.classList.add('hidden');
+      imgPreview.classList.remove(currentFilter);
+    }
+  }
 })();

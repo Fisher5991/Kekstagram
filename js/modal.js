@@ -27,10 +27,9 @@
     },
 
     close: function () {
-      console.log(this.current);
       this.current.classList.add('hidden');
       if (this.current === imgUploadOverlay) {
-        uploadFileInput.value = '';
+        window.form.reset();
       }
       this.current = undefined;
       document.removeEventListener('keydown', window.modal.onPopupEscPress);
