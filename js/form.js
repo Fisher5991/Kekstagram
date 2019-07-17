@@ -16,7 +16,6 @@
   var inputFlag = false;
   var currentFilter;
   var currentFilterName;
-  var defaultFilter = 'effect-none';
   var scale = document.querySelector('.scale');
   var scaleLine = scale.querySelector('.scale__line');
   var scalePin = scaleLine.querySelector('.scale__pin');
@@ -49,13 +48,6 @@
     }
   }
 
-  // 'none': '',
-  //   'chrome': 'filter: grayscale(0.2)',
-  //   'sepia': 'filter: sepia(0.2)',
-  //   'marvin': 'filter: invert(20%)',
-  //   'phobos': 'filter: blur(0.6px)',
-  //   'heat': 'filter: brightness(0.6)'
-
   var filterToValue = {
     'none': '',
     'chrome': 'grayscale',
@@ -74,31 +66,17 @@
     'heat': '3'
   }
 
-  var changeSaturation = function (xPercent) {
-    var currentValue = (parseInt(MAX_FILTER_VALUE[currentFilterName], 10)) / 100 * xPercent + MAX_FILTER_VALUE[currentFilterName].replace(/[-.0-9]*/g, '');
-    imgPreview.style.filter = filterToValue[currentFilterName] + '(' + currentValue + ')';
+  var changeFilter = function (oldFilter, newFilter) {
+    imgPreview.classList.remove(oldFilter);
+    imgPreview.classList.add(newFilter)
   }
 
-  var onEffectChange = function (evt) {
-    var prevFilter = currentFilter;
-    var defaultValue;
-    if (prevFilter === defaultFilter || !prevFilter) {
-      scale.classList.remove('hidden');
-    }
-    imgPreview.classList.remove(prevFilter);
-    currentFilter = evt.target.id;
-    if (currentFilter === defaultFilter) {
-      scale.classList.add('hidden');
-    }
-    scalePin.style.left = DEFAULT_PERCENT;
-    scaleLevel.style.width = DEFAULT_PERCENT;
-    imgPreview.classList.add(currentFilter);
-    currentFilterName = currentFilter.replace('effect-', '');
-    if (currentFilter !== defaultFilter) {
-      changeSaturation(parseInt(DEFAULT_PERCENT, 10));
-    } else {
-      imgPreview.style.filter = 'none';
-    }
+  var changeSaturation = function (xPercent, filter, filterName) {
+    var currentValue;
+    currentFilter = filter;
+    currentFilterName = filterName;
+    currentValue = (parseInt(MAX_FILTER_VALUE[currentFilterName], 10)) / 100 * xPercent + MAX_FILTER_VALUE[currentFilterName].replace(/[-.0-9]*/g, '');
+    imgPreview.style.filter = filterToValue[currentFilterName] + '(' + currentValue + ')';
   }
 
   var getUniqueElements = function (array) {
@@ -117,22 +95,9 @@
     imgUploadOverlay.classList.add('hidden');
   }
 
-  var onResizeMinusBtnClick = function (evt) {
-    evt.preventDefault();
-    var possibleValue = parseInt(resizeValueInput.value, 10) - LimitationInput.resizeValueInput.step * 100;
-    if (possibleValue >= LimitationInput.resizeValueInput.min * 100) {
-      resizeValueInput.value = possibleValue + '%';
-      imgPreviewPicture.style = 'transform: scale(' + possibleValue / 100 + ')';
-    }
-  }
-
-  var onResizePlusBtnClick = function (evt) {
-    evt.preventDefault();
-    var possibleValue = parseInt(resizeValueInput.value, 10) + LimitationInput.resizeValueInput.step * 100;
-    if (possibleValue <= LimitationInput.resizeValueInput.max * 100) {
-      resizeValueInput.value = possibleValue + '%';
-      imgPreviewPicture.style = 'transform: scale(' + possibleValue / 100 + ')';
-    }
+  var adjustScale = function (possibleValue) {
+    resizeValueInput.value = possibleValue + '%';
+    imgPreviewPicture.style = 'transform: scale(' + possibleValue / 100 + ')';
   }
 
   var onUploadImageSubmit = function (evt) {
@@ -203,11 +168,11 @@
   }
 
   uploadFormCancel.addEventListener('click', onUploadCancelButtonClick);
-  uploadEffects.addEventListener('change', onEffectChange, true);
-  resizeMinusBtn.addEventListener('click', onResizeMinusBtnClick);
-  resizePlusBtn.addEventListener('click', onResizePlusBtnClick);
   uploadImageForm.addEventListener('submit', onUploadImageSubmit);
   textHashtagsInput.addEventListener('input', onHashtagsFieldInput);
+  window.initializeScale(resizeMinusBtn, adjustScale, LimitationInput);
+  window.initializeScale(resizePlusBtn, adjustScale, LimitationInput);
+  window.initializeFilters(uploadEffects, changeFilter, changeSaturation);
 
   imgPreview.style = "position: relative; z-index: -1";
   textDescriptionTextarea.maxLength = LimitationInput.descriptionTextarea.maxLength;
@@ -247,7 +212,7 @@
       if (offsetX >= SCALE_PIN_COORD.min && offsetX <= SCALE_PIN_COORD.max) {
         scalePin.style.left = offsetXPercent + '%';
         scaleLevel.style.width = offsetXPercent + '%';
-        changeSaturation(offsetXPercent);
+        changeSaturation(offsetXPercent, currentFilter, currentFilterName);
       }
     }
 
