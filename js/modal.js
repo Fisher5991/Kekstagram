@@ -23,7 +23,6 @@
       commentsCount.textContent = window.picture.getPhotoList()[id].comments.length;
       window.preview.addBigImageCloseHandler();
       document.addEventListener('keydown', window.modal.onPopupEscPress);
-      console.log(this.current);
     },
 
     close: function () {
