@@ -88,6 +88,16 @@
     });
 
     return Object.keys(object);
+
+    // for (var i = 0; i < hashtagsList.length; i++) {
+    //   var hashtag = hashtagsList[i].toLowerCase();
+
+    //   if (!object.hasOwnProperty(hashtag)) {
+    //     object[hashtag] = true;
+    //   } else {
+    //     break;
+    //   }
+    // }
   }
 
   var onUploadCancelButtonClick = function (evt) {
@@ -100,8 +110,7 @@
     imgPreviewPicture.style = 'transform: scale(' + possibleValue / 100 + ')';
   }
 
-  var onUploadImageSubmit = function (evt) {
-    var hashtagsValues = textHashtagsInput.value;
+  var checkHashtags = function (hashtagsValues) {
     var hashtagsList;
     var invalidityTextList = [];
     var hashtagsNumber;
@@ -110,10 +119,6 @@
     var uniqueHashtagsValues;
     var firstSymbolFlag = false;
     var lengthFlag = false;
-
-    if (!hashtagsValues) {
-      return;
-    }
 
     hashtagsList = hashtagsValues.split(' ');
     hashtagsLength = hashtagsList.length;
@@ -143,20 +148,31 @@
     uniqueHashtagsList = getUniqueElements(hashtagsList);
     uniqueHashtagsValues = uniqueHashtagsList.join(' ');
 
-    if (hashtagsValues !== uniqueHashtagsValues) {
+    if (hashtagsValues.toLowerCase() !== uniqueHashtagsValues) {
       invalidityTextList.push('Один и тот же хэш-тег не может быть использован дважды');
       invalidityTextList.push('Теги не чувствительны к регистру: #ХэшТег и #хэштег считаются одним и тем же тегом');
     }
 
+    return invalidityTextList;
+  }
+
+  var onUploadImageSubmit = function (evt) {
+    var invalidityTextList = [];
+    var hashtagsValues = textHashtagsInput.value;
+
+    evt.preventDefault();
+
+    if (hashtagsValues) {
+      invalidityTextList = checkHashtags(hashtagsValues);
+    }
+
     if (invalidityTextList.length) {
-      evt.preventDefault();
       textHashtagsInput.setCustomValidity(invalidityTextList.join('. \n'));
       textHashtagsInput.style = "border: 1px solid red";
       inputFlag = false;
     } else {
-      setTimeout(function () {
-        window.form.reset();
-      }, 1000);
+      var formData = new FormData(uploadImageForm);
+      window.backend.upload(formData, window.modal.close, window.backend.errorHandler);
     }
   }
 

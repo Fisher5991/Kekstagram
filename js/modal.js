@@ -15,22 +15,24 @@
     current: undefined,
 
     show: function (evt) {
-      var id = evt.currentTarget.getAttribute('data-index');
+      var target = evt.currentTarget;
       bigPicture.classList.remove('hidden');
       this.current = bigPicture;
-      bigImage.src = evt.currentTarget.href;
-      likesCount.textContent = window.picture.getPhotoList()[id].likes;
-      commentsCount.textContent = window.picture.getPhotoList()[id].comments.length;
+      bigImage.src = target.href;
+      console.log(target.querySelector('.picture-likes').textContent)
+      console.log(target.querySelector('.picture-comments').textContent)
+      likesCount.textContent = target.querySelector('.picture-likes').textContent;
+      commentsCount.textContent = target.querySelector('.picture-comments').textContent;
       window.preview.addBigImageCloseHandler();
       document.addEventListener('keydown', window.modal.onPopupEscPress);
     },
 
     close: function () {
-      this.current.classList.add('hidden');
-      if (this.current === imgUploadOverlay) {
+      window.modal.current.classList.add('hidden');
+      if (window.modal.current === imgUploadOverlay) {
         window.form.reset();
       }
-      this.current = undefined;
+      window.modal.current = undefined;
       document.removeEventListener('keydown', window.modal.onPopupEscPress);
     },
 
