@@ -19,8 +19,6 @@
       bigPicture.classList.remove('hidden');
       this.current = bigPicture;
       bigImage.src = target.href;
-      console.log(target.querySelector('.picture-likes').textContent)
-      console.log(target.querySelector('.picture-comments').textContent)
       likesCount.textContent = target.querySelector('.picture-likes').textContent;
       commentsCount.textContent = target.querySelector('.picture-comments').textContent;
       window.preview.addBigImageCloseHandler();
